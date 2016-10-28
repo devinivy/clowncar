@@ -1,0 +1,33 @@
+{
+  "name": "clowncar",
+  "version": "0.0.0",
+  "description": "Stream array items out of incoming JSON",
+  "main": "lib/index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "lab -a code -t 100 -L",
+    "coveralls": "lab -r lcov | coveralls"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/devinivy/clowncar.git"
+  },
+  "keywords": [
+  ],
+  "author": "Devin Ivy <devin@bigroomstudios.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/devinivy/clowncar/issues"
+  },
+  "homepage": "https://github.com/devinivy/clowncar#readme",
+  "dependencies": {
+    "json-depth-stream": ">=2.1.0 <3"
+  },
+  "devDependencies": {
+    "code": "4.x.x",
+    "coveralls": "2.x.x",
+    "lab": "11.x.x"
+  }
+}
