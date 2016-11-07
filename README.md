@@ -6,15 +6,31 @@ Stream array items out of incoming JSON
 
 ## Usage
 ```js
+const Clowncar = require('clowncar');
+const Wreck = require('wreck');
+
+Wreck.request('get', 'https://api.npms.io/v2/search?q=streams&size=100', null, (err, res) => {
+
+    if (err) {
+        throw err;
+    }
+
+    const clowncar = new Clowncar('results');
+
+    res.pipe(clowncar).on('data', (result) => {
+
+        console.log(result.package.name);
+    });
+});
 ```
 
 ## API
 ### `new Clowncar([pathToArray], [doParse])`
 
-Returns a new Transform stream, which will receive streaming JSON and output the items of an array within that JSON where,
+Returns a new [Transform stream](https://nodejs.org/api/stream.html#stream_class_stream_transform), which will receive streaming JSON and output the items of an array within that JSON where,
 
- - `pathToArray` - a path in the form of an array or [`Hoek.reach()`](https://github.com/hapijs/hoek/blob/master/API.md#reachobj-chain-options)-style string, specifying where in the incoming JSON the array will be found.  Defaults to `[]`, meaning that the incoming JSON is the array itself
- 
+ - `pathToArray` - a path in the form of an array or [`Hoek.reach()`](https://github.com/hapijs/hoek/blob/master/API.md#reachobj-chain-options)-style string, specifying where in the incoming JSON the array will be found.  Defaults to `[]`, meaning that the incoming JSON is the array itself.
+
  For example, `['a', 1, 'b']` and `'a.1.b'` both represent the array `["this", "array"]` within the following JSON,
 
  ```json
@@ -33,7 +49,7 @@ Returns a new Transform stream, which will receive streaming JSON and output the
 
 ## Extras
 ### Approach
-A major downside of parsing JSON as it streams is that it is much slower than using `JSON.parse()`.  While `JSON.parse()` is exceptionally fast, parsing large JSON objects does block the event loop in nasty ways and uses-up a lot of memory.  One thing that makes a JSON object large is when it may contain an arbitrarily large number of array items; this is where clowncar shines.  Rather than carefully parsing every bit of JSON while it streams, clowncar instead just identifies items within an array, then `JSON.parse()`s each one of them separately.  That is, clowncar parses as little of the JSON as is necessary, and leaves the heavy-lifting to `JSON.parse()`.  This has the benefits of keeping a low memory / event-loop footprint while taking advantage of the speed of `JSON.parse()`, which no streaming JSON parser can touch today.
+A major downside of parsing streaming JSON is that it is much slower than using `JSON.parse()`.  While `JSON.parse()` is exceptionally fast, parsing large JSON objects does block the event loop and use memory, sometimes in nasty ways.  One thing that makes a JSON object large is when it may contain an array of arbitrary length; this is where clowncar shines.  Rather than carefully parsing every bit of JSON while it streams, clowncar instead just identifies items within an array, then `JSON.parse()`s each one of them separately.  That is, clowncar parses as little of the JSON as is necessary on its own, and leaves the heavy-lifting to `JSON.parse()`.  This has the benefits of keeping a low memory / event-loop footprint while taking advantage of the speed of `JSON.parse()`, which no streaming JSON parser can touch today.
 
 ### Resources
 If you're into streaming JSON, you've gotta check-out the following,
