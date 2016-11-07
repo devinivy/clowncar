@@ -1,6 +1,6 @@
 {
   "name": "clowncar",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Stream array items out of incoming JSON",
   "main": "lib/index.js",
   "directories": {
@@ -14,8 +14,7 @@
     "type": "git",
     "url": "git+https://github.com/devinivy/clowncar.git"
   },
-  "keywords": [
-  ],
+  "keywords": [],
   "author": "Devin Ivy <devin@bigroomstudios.com>",
   "license": "MIT",
   "bugs": {
