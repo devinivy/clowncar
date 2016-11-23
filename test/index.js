@@ -190,7 +190,7 @@ describe('Clowncar', () => {
 
         setImmediate(() => {
 
-            stream.write('{"a":{"c":[6,6,6],"b":[0,"safe",0],"d":[6,6,6]}');
+            stream.write('{"a":{"c":[6,6,6],"b":[0,"safe",0],"d":[6,6,6]}}');
             stream.end();
         });
 
@@ -212,7 +212,7 @@ describe('Clowncar', () => {
 
         setImmediate(() => {
 
-            stream.write('{"a":[0,0,{"b":[1,2,3]}]');
+            stream.write('{"a":[0,0,{"b":[1,2,3]}]}');
             stream.end();
         });
 
