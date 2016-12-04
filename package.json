@@ -22,6 +22,7 @@
   },
   "homepage": "https://github.com/devinivy/clowncar#readme",
   "dependencies": {
+    "buffer-from": "0.1.x",
     "json-depth-stream": ">=2.1.0 <3"
   },
   "devDependencies": {

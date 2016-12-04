@@ -49,7 +49,7 @@ describe('Clowncar', () => {
 
     it('outputs streaming JSON array items as buffers.', (done) => {
 
-        const clowncar = new Clowncar(false);
+        const clowncar = new Clowncar({ doParse: false });
         const stream = new Stream.PassThrough();
 
         setImmediate(() => {
@@ -93,7 +93,10 @@ describe('Clowncar', () => {
 
     it('can stream parsed items as buffers from a deep array.', (done) => {
 
-        const clowncar = new Clowncar(['a', 1, 'b'], false);
+        const clowncar = new Clowncar({
+            pathToArray: ['a', 1, 'b'],
+            doParse: false
+        });
         const stream = new Stream.PassThrough();
 
         setImmediate(() => {
