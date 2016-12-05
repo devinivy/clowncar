@@ -1,6 +1,6 @@
 {
   "name": "clowncar",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Stream array items out of incoming JSON",
   "main": "lib/index.js",
   "directories": {
