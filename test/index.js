@@ -383,6 +383,77 @@ describe('Clowncar', () => {
         });
     });
 
+    it('emits remainder as empty array when incoming JSON is the target array.', (done) => {
+
+        const clowncar = new Clowncar({ keepRemainder: true });
+
+        const stream = new Stream.PassThrough();
+
+        setImmediate(() => {
+
+            stream.write('[');
+            stream.write('1');
+            stream.write(',2');
+            stream.write(',3');
+            stream.write(']');
+            stream.end();
+        });
+
+        getChunks(stream.pipe(clowncar), (err, chunks) => {
+
+            if (err) {
+                return done(err);
+            }
+
+            expect(chunks).to.equal([1, 2, 3]);
+
+            clowncar.once('remainder', (remainder) => {
+
+                expect(remainder).to.equal([]);
+
+                done();
+            });
+        });
+    });
+
+    it('emits remainder correctly when JSON includes unnecessary whitespace.', (done) => {
+
+        const clowncar = new Clowncar({
+            pathToArray: ['a', 2, 'b'],
+            keepRemainder: true
+        });
+
+        const stream = new Stream.PassThrough();
+
+        setImmediate(() => {
+
+            stream.write('{"a":[0,0,{"b" :  [  1 ,2, 3  ]  }]}');
+            stream.end();
+        });
+
+        getChunks(stream.pipe(clowncar), (err, chunks) => {
+
+            if (err) {
+                return done(err);
+            }
+
+            expect(chunks).to.equal([1, 2, 3]);
+
+            clowncar.once('remainder', (remainder) => {
+
+                expect(remainder).to.equal({
+                    a: [
+                        0,
+                        0,
+                        { b: [] }
+                    ]
+                });
+
+                done();
+            });
+        });
+    });
+
     it('emits empty remainder when payload is empty.', (done) => {
 
         const clowncar = new Clowncar({ keepRemainder: true });
