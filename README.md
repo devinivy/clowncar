@@ -25,27 +25,31 @@ Wreck.request('get', 'https://api.npms.io/v2/search?q=streams&size=100', null, (
 ```
 
 ## API
-### `new Clowncar([pathToArray], [doParse])`
+### `new Clowncar([options])`
 
-Returns a new [Transform stream](https://nodejs.org/api/stream.html#stream_class_stream_transform), which will receive streaming JSON and output the items of an array within that JSON where,
+Returns a new [Transform stream](https://nodejs.org/api/stream.html#stream_class_stream_transform), which will receive streaming JSON and output the items of an array within that JSON where `options` is either,
 
- - `pathToArray` - a path in the form of an array or [`Hoek.reach()`](https://github.com/hapijs/hoek/blob/master/API.md#reachobj-chain-options)-style string, specifying where in the incoming JSON the array will be found.  Defaults to `[]`, meaning that the incoming JSON is the array itself.
+ - an array or string specifying `pathToArray` as described below or,
+ - an object of the form,
+   - `pathToArray` - a path in the form of an array or [`Hoek.reach()`](https://github.com/hapijs/hoek/blob/master/API.md#reachobj-chain-options)-style string, specifying where in the incoming JSON the array will be found.  Defaults to `[]`, meaning that the incoming JSON is the array itself.
 
- For example, `['a', 1, 'b']` and `'a.1.b'` both represent the array `["this", "array"]` within the following JSON,
+     For example, `['a', 1, 'b']` and `'a.1.b'` both represent the array `["this", "array"]` within the following JSON,
 
- ```json
-  {
-    "a": [
-      "junk",
+     ```json
       {
-        "b": ["this", "array"]
-      },
-      "junk"
-    ]
-  }
-```
+        "a": [
+          "junk",
+          {
+            "b": ["this", "array"]
+          },
+          "junk"
+        ]
+      }
+     ```
 
-- `doParse` - a boolean specifying whether the outgoing array items will be parsed (with `JSON.parse()`), or left as buffers.  Defaults to `true`.  When `true`, the stream is placed into object mode.
+   - `keepRemainder` - a boolean specifying whether the remainder of the incoming JSON (omitting the array items at `pathToArray`) should be emitted after the stream ends.  When `true` a `'remainder'` event is emitted after the `'end'` event with a single argument containing the remainder.  Defaults to `false`.
+
+   - `doParse` - a boolean specifying whether the outgoing array items and remainder should be parsed (with `JSON.parse()`), or left as buffers.  Defaults to `true`.  When `true`, the stream is placed into object mode.
 
 ## Extras
 ### Approach
