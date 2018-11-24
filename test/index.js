@@ -5,6 +5,7 @@
 const Lab = require('lab');
 const Code = require('code');
 const Stream = require('stream');
+const Toys = require('toys');
 const Clowncar = require('..');
 
 // Test shortcuts
@@ -16,16 +17,17 @@ const expect = Code.expect;
 
 describe('Clowncar', () => {
 
-    const getChunks = (stream, cb) => {
+    const getChunks = async (stream) => {
 
         const chunks = [];
-
         stream.on('data', (chk) => chunks.push(Buffer.isBuffer(chk) ? `B(${chk.toString()})` : chk));
-        stream.once('end', () => cb(null, chunks));
-        stream.once('error', (err) => cb(err));
+
+        await Toys.stream(stream);
+
+        return chunks;
     };
 
-    it('outputs streaming JSON array items as JSON.', (done) => {
+    it('outputs streaming JSON array items as JSON.', async () => {
 
         const clowncar = new Clowncar();
         const stream = new Stream.PassThrough();
@@ -36,18 +38,12 @@ describe('Clowncar', () => {
             stream.end();
         });
 
-        getChunks(stream.pipe(clowncar), (err, chunks) => {
+        const chunks = await getChunks(stream.pipe(clowncar));
 
-            if (err) {
-                return done(err);
-            }
-
-            expect(chunks).to.equal([{ a: 1 }, { b: 2 }, { c: 3 }]);
-            done();
-        });
+        expect(chunks).to.equal([{ a: 1 }, { b: 2 }, { c: 3 }]);
     });
 
-    it('outputs streaming JSON array items as buffers.', (done) => {
+    it('outputs streaming JSON array items as buffers.', async () => {
 
         const clowncar = new Clowncar({ doParse: false });
         const stream = new Stream.PassThrough();
@@ -58,18 +54,12 @@ describe('Clowncar', () => {
             stream.end();
         });
 
-        getChunks(stream.pipe(clowncar), (err, chunks) => {
+        const chunks = await getChunks(stream.pipe(clowncar));
 
-            if (err) {
-                return done(err);
-            }
-
-            expect(chunks).to.equal(['B({"a":1})', 'B({"b":2})', 'B({"c":3})']);
-            done();
-        });
+        expect(chunks).to.equal(['B({"a":1})', 'B({"b":2})', 'B({"c":3})']);
     });
 
-    it('can stream parsed items from a deep array.', (done) => {
+    it('can stream parsed items from a deep array.', async () => {
 
         const clowncar = new Clowncar({ pathToArray: ['a', 1, 'b'] });
         const stream = new Stream.PassThrough();
@@ -80,18 +70,12 @@ describe('Clowncar', () => {
             stream.end();
         });
 
-        getChunks(stream.pipe(clowncar), (err, chunks) => {
+        const chunks = await getChunks(stream.pipe(clowncar));
 
-            if (err) {
-                return done(err);
-            }
-
-            expect(chunks).to.equal([1, 2, 3]);
-            done();
-        });
+        expect(chunks).to.equal([1, 2, 3]);
     });
 
-    it('can stream parsed items as buffers from a deep array.', (done) => {
+    it('can stream parsed items as buffers from a deep array.', async () => {
 
         const clowncar = new Clowncar({
             pathToArray: ['a', 1, 'b'],
@@ -106,18 +90,12 @@ describe('Clowncar', () => {
             stream.end();
         });
 
-        getChunks(stream.pipe(clowncar), (err, chunks) => {
+        const chunks = await getChunks(stream.pipe(clowncar));
 
-            if (err) {
-                return done(err);
-            }
-
-            expect(chunks).to.equal(['B(1)', 'B(2)', 'B(3)']);
-            done();
-        });
+        expect(chunks).to.equal(['B(1)', 'B(2)', 'B(3)']);
     });
 
-    it('ends stream early after finishing parsing, does not error.', (done) => {
+    it('ends stream early after finishing parsing, does not error.', async () => {
 
         const clowncar = new Clowncar({ pathToArray: ['a'] });
         const stream = new Stream.PassThrough();
@@ -129,17 +107,14 @@ describe('Clowncar', () => {
             stream.write('"b":"x"}'); // does not trigger "write after end" error
         });
 
-        getChunks(stream.pipe(clowncar), (err, chunks) => {
+        const chunks = await getChunks(stream.pipe(clowncar));
 
-            stream.end(); // end source stream after clowncar has clearly ended on its own
+        stream.end(); // end source stream after clowncar has clearly ended on its own
 
-            expect(err).to.not.exist();
-            expect(chunks).to.equal([1, 2, 3]);
-            done();
-        });
+        expect(chunks).to.equal([1, 2, 3]);
     });
 
-    it('handles items that span over one chunk.', (done) => {
+    it('handles items that span over one chunk.', async () => {
 
         const clowncar = new Clowncar();
         const stream = new Stream.PassThrough();
@@ -154,18 +129,12 @@ describe('Clowncar', () => {
             stream.end();
         });
 
-        getChunks(stream.pipe(clowncar), (err, chunks) => {
+        const chunks = await getChunks(stream.pipe(clowncar));
 
-            if (err) {
-                return done(err);
-            }
-
-            expect(chunks).to.equal(['one', 'two']);
-            done();
-        });
+        expect(chunks).to.equal(['one', 'two']);
     });
 
-    it('is not tricked by items at the same depth which are not arrays.', (done) => {
+    it('is not tricked by items at the same depth which are not arrays.', async () => {
 
         const clowncar = new Clowncar({ pathToArray: ['a', 'b'] });
         const stream = new Stream.PassThrough();
@@ -176,18 +145,12 @@ describe('Clowncar', () => {
             stream.end();
         });
 
-        getChunks(stream.pipe(clowncar), (err, chunks) => {
+        const chunks = await getChunks(stream.pipe(clowncar));
 
-            if (err) {
-                return done(err);
-            }
-
-            expect(chunks).to.equal([]);
-            done();
-        });
+        expect(chunks).to.equal([]);
     });
 
-    it('is not tricked by items at the same depth which are arrays.', (done) => {
+    it('is not tricked by items at the same depth which are arrays.', async () => {
 
         const clowncar = new Clowncar({ pathToArray: ['a', 'b'] });
         const stream = new Stream.PassThrough();
@@ -198,18 +161,12 @@ describe('Clowncar', () => {
             stream.end();
         });
 
-        getChunks(stream.pipe(clowncar), (err, chunks) => {
+        const chunks = await getChunks(stream.pipe(clowncar));
 
-            if (err) {
-                return done(err);
-            }
-
-            expect(chunks).to.equal([0, 'safe', 0]);
-            done();
-        });
+        expect(chunks).to.equal([0, 'safe', 0]);
     });
 
-    it('accepts hoek-style path notation.', (done) => {
+    it('accepts hoek-style path notation.', async () => {
 
         const clowncar = new Clowncar({ pathToArray: 'a.2.b' });
         const stream = new Stream.PassThrough();
@@ -220,18 +177,12 @@ describe('Clowncar', () => {
             stream.end();
         });
 
-        getChunks(stream.pipe(clowncar), (err, chunks) => {
+        const chunks = await getChunks(stream.pipe(clowncar));
 
-            if (err) {
-                return done(err);
-            }
-
-            expect(chunks).to.equal([1, 2, 3]);
-            done();
-        });
+        expect(chunks).to.equal([1, 2, 3]);
     });
 
-    it('accepts path to array in lieu of full options object (array).', (done) => {
+    it('accepts path to array in lieu of full options object (array).', async () => {
 
         const clowncar = new Clowncar(['a', 2, 'b']);
         const stream = new Stream.PassThrough();
@@ -242,18 +193,12 @@ describe('Clowncar', () => {
             stream.end();
         });
 
-        getChunks(stream.pipe(clowncar), (err, chunks) => {
+        const chunks = await getChunks(stream.pipe(clowncar));
 
-            if (err) {
-                return done(err);
-            }
-
-            expect(chunks).to.equal([1, 2, 3]);
-            done();
-        });
+        expect(chunks).to.equal([1, 2, 3]);
     });
 
-    it('accepts path to array in lieu of full options object (hoek-style).', (done) => {
+    it('accepts path to array in lieu of full options object (hoek-style).', async () => {
 
         const clowncar = new Clowncar('a.2.b');
         const stream = new Stream.PassThrough();
@@ -264,18 +209,12 @@ describe('Clowncar', () => {
             stream.end();
         });
 
-        getChunks(stream.pipe(clowncar), (err, chunks) => {
+        const chunks = await getChunks(stream.pipe(clowncar));
 
-            if (err) {
-                return done(err);
-            }
-
-            expect(chunks).to.equal([1, 2, 3]);
-            done();
-        });
+        expect(chunks).to.equal([1, 2, 3]);
     });
 
-    it('does not emit remainder when keepRemainder is false.', (done) => {
+    it('does not emit remainder when keepRemainder is false.', async () => {
 
         const clowncar = new Clowncar({
             pathToArray: ['a', 2, 'b'],
@@ -297,22 +236,16 @@ describe('Clowncar', () => {
             emittedRemainder = true;
         });
 
-        getChunks(stream.pipe(clowncar), (err, chunks) => {
+        const chunks = await getChunks(stream.pipe(clowncar));
 
-            if (err) {
-                return done(err);
-            }
+        expect(chunks).to.equal([1, 2, 3]);
 
-            expect(chunks).to.equal([1, 2, 3]);
-            setImmediate(() => {
+        await new Promise((resolve) => setImmediate(resolve));
 
-                expect(emittedRemainder).to.equal(false);
-                done();
-            });
-        });
+        expect(emittedRemainder).to.equal(false);
     });
 
-    it('does not emit remainder by default.', (done) => {
+    it('does not emit remainder by default.', async () => {
 
         const clowncar = new Clowncar({ pathToArray: ['a', 2, 'b'] });
         const stream = new Stream.PassThrough();
@@ -330,22 +263,16 @@ describe('Clowncar', () => {
             emittedRemainder = true;
         });
 
-        getChunks(stream.pipe(clowncar), (err, chunks) => {
+        const chunks = await getChunks(stream.pipe(clowncar));
 
-            if (err) {
-                return done(err);
-            }
+        expect(chunks).to.equal([1, 2, 3]);
 
-            expect(chunks).to.equal([1, 2, 3]);
-            setImmediate(() => {
+        await new Promise((resolve) => setImmediate(resolve));
 
-                expect(emittedRemainder).to.equal(false);
-                done();
-            });
-        });
+        expect(emittedRemainder).to.equal(false);
     });
 
-    it('emits remainder after end, omitting contents of the targeted array.', (done) => {
+    it('emits remainder after end, omitting contents of the targeted array.', async () => {
 
         const clowncar = new Clowncar({
             pathToArray: ['a', 2, 'b'],
@@ -360,30 +287,22 @@ describe('Clowncar', () => {
             stream.end();
         });
 
-        getChunks(stream.pipe(clowncar), (err, chunks) => {
+        const [chunks, remainder] = await Promise.all([
+            getChunks(stream.pipe(clowncar)),
+            Toys.event(clowncar, 'remainder')
+        ]);
 
-            if (err) {
-                return done(err);
-            }
-
-            expect(chunks).to.equal([1, 2, 3]);
-
-            clowncar.once('remainder', (remainder) => {
-
-                expect(remainder).to.equal({
-                    a: [
-                        0,
-                        0,
-                        { b: [] }
-                    ]
-                });
-
-                done();
-            });
+        expect(chunks).to.equal([1, 2, 3]);
+        expect(remainder).to.equal({
+            a: [
+                0,
+                0,
+                { b: [] }
+            ]
         });
     });
 
-    it('emits remainder as empty array when incoming JSON is the target array.', (done) => {
+    it('emits remainder as empty array when incoming JSON is the target array.', async () => {
 
         const clowncar = new Clowncar({ keepRemainder: true });
 
@@ -399,24 +318,16 @@ describe('Clowncar', () => {
             stream.end();
         });
 
-        getChunks(stream.pipe(clowncar), (err, chunks) => {
+        const [chunks, remainder] = await Promise.all([
+            getChunks(stream.pipe(clowncar)),
+            Toys.event(clowncar, 'remainder')
+        ]);
 
-            if (err) {
-                return done(err);
-            }
-
-            expect(chunks).to.equal([1, 2, 3]);
-
-            clowncar.once('remainder', (remainder) => {
-
-                expect(remainder).to.equal([]);
-
-                done();
-            });
-        });
+        expect(chunks).to.equal([1, 2, 3]);
+        expect(remainder).to.equal([]);
     });
 
-    it('emits remainder correctly when JSON includes unnecessary whitespace.', (done) => {
+    it('emits remainder correctly when JSON includes unnecessary whitespace.', async () => {
 
         const clowncar = new Clowncar({
             pathToArray: ['a', 2, 'b'],
@@ -431,30 +342,22 @@ describe('Clowncar', () => {
             stream.end();
         });
 
-        getChunks(stream.pipe(clowncar), (err, chunks) => {
+        const [chunks, remainder] = await Promise.all([
+            getChunks(stream.pipe(clowncar)),
+            Toys.event(clowncar, 'remainder')
+        ]);
 
-            if (err) {
-                return done(err);
-            }
-
-            expect(chunks).to.equal([1, 2, 3]);
-
-            clowncar.once('remainder', (remainder) => {
-
-                expect(remainder).to.equal({
-                    a: [
-                        0,
-                        0,
-                        { b: [] }
-                    ]
-                });
-
-                done();
-            });
+        expect(chunks).to.equal([1, 2, 3]);
+        expect(remainder).to.equal({
+            a: [
+                0,
+                0,
+                { b: [] }
+            ]
         });
     });
 
-    it('emits empty remainder when payload is empty.', (done) => {
+    it('emits empty remainder when payload is empty.', async () => {
 
         const clowncar = new Clowncar({ keepRemainder: true });
         const stream = new Stream.PassThrough();
@@ -465,24 +368,16 @@ describe('Clowncar', () => {
             stream.end();
         });
 
-        getChunks(stream.pipe(clowncar), (err, chunks) => {
+        const [chunks, remainder] = await Promise.all([
+            getChunks(stream.pipe(clowncar)),
+            Toys.event(clowncar, 'remainder')
+        ]);
 
-            if (err) {
-                return done(err);
-            }
-
-            expect(chunks).to.equal([]);
-
-            clowncar.once('remainder', function () {
-
-                expect(arguments.length).to.equal(0);
-
-                done();
-            });
-        });
+        expect(chunks).to.equal([]);
+        expect(remainder).to.not.exist();
     });
 
-    it('emits remainder unparsed when doParse is false.', (done) => {
+    it('emits remainder unparsed when doParse is false.', async () => {
 
         const clowncar = new Clowncar({
             pathToArray: 'a',
@@ -498,25 +393,17 @@ describe('Clowncar', () => {
             stream.end();
         });
 
-        getChunks(stream.pipe(clowncar), (err, chunks) => {
+        const [chunks, remainder] = await Promise.all([
+            getChunks(stream.pipe(clowncar)),
+            Toys.event(clowncar, 'remainder')
+        ]);
 
-            if (err) {
-                return done(err);
-            }
-
-            expect(chunks).to.equal(['B(1)', 'B(2)', 'B(3)']);
-
-            clowncar.once('remainder', (remainder) => {
-
-                expect(Buffer.isBuffer(remainder)).to.equal(true);
-                expect(remainder.toString()).to.equal('{"a":[]}');
-
-                done();
-            });
-        });
+        expect(chunks).to.equal(['B(1)', 'B(2)', 'B(3)']);
+        expect(Buffer.isBuffer(remainder)).to.equal(true);
+        expect(remainder.toString()).to.equal('{"a":[]}');
     });
 
-    it('does not end stream early after finishing parsing when keeping remainder.', (done) => {
+    it('does not end stream early after finishing parsing when keeping remainder.', async () => {
 
         const clowncar = new Clowncar({
             pathToArray: ['a'],
@@ -539,18 +426,13 @@ describe('Clowncar', () => {
             });
         });
 
-        getChunks(stream.pipe(clowncar), (err, chunks) => {
+        const [chunks, remainder] = await Promise.all([
+            getChunks(stream.pipe(clowncar)),
+            Toys.event(clowncar, 'remainder')
+        ]);
 
-            expect(err).to.not.exist();
-            expect(calledEndLate).to.equal(true);
-            expect(chunks).to.equal([1, 2, 3]);
-
-            clowncar.once('remainder', (remainder) => {
-
-                expect(remainder).to.equal({ a: [], b: 'x' });
-
-                done();
-            });
-        });
+        expect(calledEndLate).to.equal(true);
+        expect(chunks).to.equal([1, 2, 3]);
+        expect(remainder).to.equal({ a: [], b: 'x' });
     });
 });

@@ -9,19 +9,16 @@ Stream array items out of incoming JSON
 const Clowncar = require('clowncar');
 const Wreck = require('wreck');
 
-Wreck.request('get', 'https://api.npms.io/v2/search?q=streams&size=100', null, (err, res) => {
+(async () => {
 
-    if (err) {
-        throw err;
-    }
-
+    const res = await Wreck.request('get', 'https://api.npms.io/v2/search?q=streams&size=100');
     const clowncar = new Clowncar('results');
 
     res.pipe(clowncar).on('data', (result) => {
 
         console.log(result.package.name);
     });
-});
+})();
 ```
 
 ## API

@@ -14,7 +14,15 @@
     "type": "git",
     "url": "git+https://github.com/devinivy/clowncar.git"
   },
-  "keywords": [],
+  "keywords": [
+    "streams",
+    "stream",
+    "streaming",
+    "transform",
+    "json",
+    "parse",
+    "array"
+  ],
   "author": "Devin Ivy <devin@bigroomstudios.com>",
   "license": "MIT",
   "bugs": {
@@ -22,12 +30,12 @@
   },
   "homepage": "https://github.com/devinivy/clowncar#readme",
   "dependencies": {
-    "buffer-from": "0.1.x",
     "json-depth-stream": ">=2.1.0 <3"
   },
   "devDependencies": {
-    "code": "4.x.x",
-    "coveralls": "2.x.x",
-    "lab": "11.x.x"
+    "code": "5.x.x",
+    "coveralls": "3.x.x",
+    "lab": "18.x.x",
+    "toys": "2.x.x"
   }
 }
